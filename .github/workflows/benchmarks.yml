@@ -57,9 +57,5 @@ jobs:
           --benchmark-enable
           --benchmark-json output.json
 
-      - uses: benchmark-action/github-action-benchmark@v1
-        with:
-          tool: pytest
-          output-file-path: output.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
+      - run: |
+          curl -X POST -H "Content-Type: application/json" -H "Authorization: ${{ secrets.AVALANCHE_KEY }}" -d @output.json https://avalanche-api.vercel.app/api/upload
