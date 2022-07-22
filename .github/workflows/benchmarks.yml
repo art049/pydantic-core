@@ -7,8 +7,6 @@ on:
       - 'tests/benchmarks/**'
       - 'Cargo.toml'
       - '.github/workflows/benchmarks.yml'
-    branches:
-      - main
 
 permissions:
   deployments: write
