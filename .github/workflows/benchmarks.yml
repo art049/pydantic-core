@@ -53,7 +53,8 @@ jobs:
       - run: >
           pytest tests/benchmarks/
           --benchmark-enable
-          --benchmark-json output.json
+          --benchmark-save output
 
       - run: |
-          curl -X POST -H "Content-Type: application/json" -H "Authorization: ${{ secrets.AVALANCHE_KEY }}" -d @output.json https://avalanche-api.vercel.app/api/upload
+          BENCH_FILE=$(find .benchmarks -type f)
+          curl -X POST -H "Content-Type: application/json" -H "Authorization: ${{ secrets.AVALANCHE_KEY }}" -d @$BENCH_FILE https://avalanche-api.vercel.app/api/upload
