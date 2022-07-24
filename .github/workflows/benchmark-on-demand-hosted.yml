@@ -1,4 +1,4 @@
-name: benchmark-on-demand
+name: benchmark-on-demand-hosted
 
 on:
   workflow_dispatch:
@@ -8,13 +8,14 @@ on:
         type: string
         required: true
 
+
 permissions:
   deployments: write
   contents: write
 
 jobs:
   benchmarks:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
@@ -59,6 +60,15 @@ jobs:
           pytest tests/benchmarks/
           --benchmark-enable
           --benchmark-save output
+
+      - uses: hkusu/s3-upload-action@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+          aws-bucket: ${{ secrets.AWS_BUCKET }}
+          bucket-root: "hosted"
+          file-path: '.benchmarks/Linux-CPython-3.10-64bit/0001_output.json'
 
       - name: Upload benchmark data to Avalanche
         run: |
