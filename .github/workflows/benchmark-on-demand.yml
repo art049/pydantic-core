@@ -56,21 +56,24 @@ jobs:
       # this is required so that pytest uses the installed package
       - run: rm tests/__init__.py
 
-      - run: >
-          pytest tests/benchmarks/
-          --benchmark-enable
-          --benchmark-save output
 
-      - uses: hkusu/s3-upload-action@v2
+      - run: apt-get install valgrind
+      - run: >
+           python pytest-callgrind.py tests/benchmarks/
+
+      - name: Archive code profile
+        uses: actions/upload-artifact@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: 'us-east-1'
-          aws-bucket: ${{ secrets.AWS_BUCKET }}
-          bucket-root: "hosted"
-          file-path: '.benchmarks/Linux-CPython-3.10-64bit/0001_output.json'
+          name: pytest-callgrind.out
+          path: .benchmarks/pytest-callgrind.out
 
       - name: Upload benchmark data to Avalanche
         run: |
-          BENCH_FILE=$(find .benchmarks -type f)
-          curl -X POST -H "Content-Type: application/json" -H "Authorization: ${{ secrets.AVALANCHE_KEY }}" -d @$BENCH_FILE https://avalanche-api.vercel.app/api/upload
+          METADATA=$(jq -c -n 'env | {GITHUB_ACTION,GITHUB_RUN_ID,GITHUB_REF,GITHUB_REPOSITORY,GITHUB_SHA,GITHUB_HEAD_REF}')
+          echo $METADATA
+          curl -X POST \
+               -H "Content-Type: application/json" \
+               -H "Authorization: ${{ secrets.AVALANCHE_KEY }}"\
+               -H "Profile-Metadata: $METADATA" \
+               -F 'profile=@./.benchmarks/pytest-callgrind.out \
+               https://avalanche-api.vercel.app/api/upload

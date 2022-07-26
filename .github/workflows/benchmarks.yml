@@ -2,11 +2,11 @@ name: benchmarks
 
 on:
   push:
-    paths:
-      - 'src/**.rs'
-      - 'tests/benchmarks/**'
-      - 'Cargo.toml'
-      - '.github/workflows/benchmarks.yml'
+    # paths:
+    #   - 'src/**.rs'
+    #   - 'tests/benchmarks/**'
+    #   - 'Cargo.toml'
+    #   - '.github/workflows/benchmarks.yml'
     branches:
       - main
 
@@ -51,15 +51,32 @@ jobs:
 
       # this is required so that pytest uses the installed package
       - run: rm tests/__init__.py
+      - run: sudo apt-get install -y valgrind
+      - run: pip install git+https://github.com/jcrist/pycallgrind.git
+      - run: |
+          mkdir -p .benchmarks
+          export PYTHONMALLOC=malloc
+          export PYTHONHASHSEED=0
+          setarch $(uname -m) -R \
+            valgrind -q --tool=callgrind \
+            --I1=32768,8,64 --D1=32768,8,64 --LL=8388608,16,64 \
+            --instr-atstart=no --compress-strings=no --combine-dumps=yes \
+            --callgrind-out-file=.benchmarks/pytest-callgrind.out \
+            pytest tests/benchmarks/
 
-      - run: >
-          pytest tests/benchmarks/
-          --benchmark-enable
-          --benchmark-json output.json
-
-      - uses: benchmark-action/github-action-benchmark@v1
+      - name: Archive profile data
+        uses: actions/upload-artifact@v3
         with:
-          tool: pytest
-          output-file-path: output.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
+          name: pytest-callgrind.out
+          path: .benchmarks/pytest-callgrind.out
+
+      - name: Upload benchmark data to codspeed
+        run: |
+          METADATA=$(jq -c -n 'env | {ref:.GITHUB_REF,repository:.GITHUB_REPOSITORY,commitHash:.GITHUB_SHA}')
+          echo $METADATA
+          curl -X POST \
+               -H "Authorization: ${{ secrets.AVALANCHE_KEY }}"\
+               -H "Profile-Metadata: $METADATA" \
+               -F 'profile=@./.benchmarks/pytest-callgrind.out' \
+               https://avalanche-api.vercel.app/api/upload
+
