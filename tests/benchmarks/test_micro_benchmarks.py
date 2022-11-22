@@ -534,7 +534,7 @@ def test_many_models_core_dict(benchmark):
     v = SchemaValidator(model_schema)
     benchmark(v.validate_python, many_models_data)
 
-
+import gc
 @pytest.mark.benchmark(group='List[SimpleMode]')
 def test_many_models_core_model(benchmark):
     class MyCoreModel:
@@ -554,7 +554,13 @@ def test_many_models_core_model(benchmark):
             },
         }
     )
+    is_gc_enabled = gc.isenabled()
+    gc.collect()
+    if is_gc_enabled:
+        gc.disable()
     benchmark(v.validate_python, many_models_data)
+    if is_gc_enabled:
+        gc.enable()
 
 
 list_of_nullable_data = [None if i % 2 else i for i in range(1000)]
