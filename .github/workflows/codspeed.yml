@@ -49,5 +49,5 @@ jobs:
       - name: Run CodSpeed benchmarks
         uses: CodSpeedHQ/action@v1
         with:
-          token: ${{ secrets.CODSPEED_TOKEN }}
+          upload_url: https://api.staging.preview.codspeed.io/upload
           run: pytest tests/benchmarks/ --codspeed
