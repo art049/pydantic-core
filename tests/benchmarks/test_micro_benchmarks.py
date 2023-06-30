@@ -657,12 +657,6 @@ class TestBenchmarkDateTime:
     def test_model_core_json(self, core_validator, benchmark, json_dict_data):
         benchmark(core_validator.validate_json, json_dict_data)
 
-    @pytest.mark.benchmark(group='datetime datetime')
-    def test_core_raw(self, benchmark, datetime_raw):
-        v = SchemaValidator({'type': 'datetime'})
-
-        benchmark(v.validate_python, datetime_raw)
-
     @pytest.mark.benchmark(group='datetime str')
     def test_core_str(self, benchmark, datetime_str):
         v = SchemaValidator({'type': 'datetime'})
