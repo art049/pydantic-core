@@ -51,5 +51,5 @@ jobs:
       - name: Run CodSpeed benchmarks
         uses: CodSpeedHQ/action@v1
         with:
-          upload_url: https://api.staging.preview.codspeed.io/upload
+          upload_url: https://9c9989c9d5.execute-api.eu-west-1.amazonaws.com/upload
           run: pytest tests/benchmarks/ --codspeed
